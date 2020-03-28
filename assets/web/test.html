@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JWT Auth Sample Tests</title>
+		<script type="text/javascript">
+			async function test(m,url,hl,p,tf,t,b=false,s=false){
+				var dt={method:m,mode:"same-origin",cache:"no-cache",credentials:"same-origin",headers:hl,redirect:"follow",referrerPolicy:"no-referrer"};
+				if (m!="GET"&&m!="HEAD"){
+					dt.body=p;
+				}
+				var r=await fetch(url,dt);
+				var o=await r.text();
+				var d=document.querySelectorAll("pre")[0];
+				if (s==false){
+					d.innerHTML+=`<span class="${((b==false?tf(o)==t:tf(o)!=t)?"green":"red")}"><span class="req">${m} ${url}</span> (${(dt.body!=undefined?"Payload: "+p:"")+(dt.body!=undefined&&JSON.stringify(hl).length!=2?", ":"")+(JSON.stringify(hl).length!=2?"Headers: "+JSON.stringify(hl).replace(/[A-Za-z0-9]+\.[A-Za-z0-9]+\.?[A-Za-z0-9-_.+/=]*/,(a,b,c)=>{
+					    return "<span class=\"token\" onclick=\"this.classList.toggle('v');\"><span class=\"full\">"+a+"</span><span class=\"small\">"+a.substring(0,7)+"&hellip;"+a.substring(a.length-7,a.length)+"</span></span>";
+					}):"")}) => <span class=\"test\">${tf(o)} ${(b==false?"=":"!")}= ${t}</span></span>\n`;
+				}
+				return o;
+			}
+			async function sleep(ms){
+				return new Promise((r)=>setTimeout(r,ms));
+			}
+			window.onload=async function(){
+				await test("POST","/auth/check_user",{},"NewKrzem",(x)=>(x.length==1?x.charCodeAt(0):x),"0");
+				await test("POST","/auth/check_user",{},"Krzem\\|",(x)=>(x.length==1?x.charCodeAt(0):x),"1");
+				await test("POST","/auth/check_user",{},"Kr",(x)=>(x.length==1?x.charCodeAt(0):x),"2");
+				await test("POST","/auth/check_user",{},"KrzemKrzemKrzemKrzem",(x)=>(x.length==1?x.charCodeAt(0):x),"3");
+				await test("POST","/auth/check_user",{},"Krzem",(x)=>(x.length==1?x.charCodeAt(0):x),"4");
+				await test("POST","/auth/signup",{},"NewKrzem|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"0");
+				await test("POST","/auth/signup",{},"Krzem\\||pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"1");
+				await test("POST","/auth/signup",{},"Kr|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"2");
+				await test("POST","/auth/signup",{},"KrzemKrzemKrzemKrzem|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"3");
+				await test("POST","/auth/signup",{},"Krzem|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"4");
+				localStorage.token=await test("POST","/auth/login",{},"NewKrzem|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"6",true);
+				await test("POST","/auth/login",{},"btdr87io|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("POST","/auth/login",{},"NewKrzem|WRONG_PASSWORD",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("GET","/auth/name",{"authorization":`Bearer ${localStorage.token}`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6",true);
+				await test("GET","/auth/name",{"authorization":`Bearer FAKE_TOKEN`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("POST","/auth/delete",{"authorization":`Bearer ${localStorage.token}`},"hle.oijk",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("POST","/auth/delete",{"authorization":`Bearer ${localStorage.token}`},"pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"0");
+				await test("POST","/auth/delete",{"authorization":`Bearer ${localStorage.token}`},"pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await sleep(1000);
+				await test("GET","/auth/name",{"authorization":`Bearer ${localStorage.token}`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				localStorage.token=await test("POST","/auth/login",{},"Krzem|pa$$wd",(x)=>(x.length==1?x.charCodeAt(0):x),"6",true,true);
+				await test("GET","/auth/logout",{"authorization":`Bearer FAKE_TOKEN`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("GET","/auth/logout",{"authorization":`Bearer ${localStorage.token}`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"0");
+				await test("GET","/auth/logout",{"authorization":`Bearer ${localStorage.token}`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+				await test("GET","/auth/name",{"authorization":`Bearer ${localStorage.token}`},"",(x)=>(x.length==1?x.charCodeAt(0):x),"6");
+			}
+		</script>
+		<style type="text/css">
+			body {
+				background: #313131;
+				width: 100%;
+				height: 100%;
+				overflow-x: hidden;
+				overflow-y: auto;
+			}
+			body, body * {
+				margin: 0;
+				padding: 0;
+			}
+			pre {
+				font-family: consolas;
+				font-size: 30px;
+				white-space: pre-wrap;
+				margin: 1px 5px;
+			}
+			pre span::selection {
+				background: #a0a0a0;
+			}
+			pre br::selection {
+				background: transparent;
+			}
+			pre span.green {
+				color: #bbe695;
+			}
+			pre span.red {
+				color: #eda89a;
+				font-size: 40px;
+				font-weight: 800 !important;
+			}
+			pre span span.req {
+				font-weight: 800;
+			}
+			pre span.green span.req {
+				color: #7aa653;
+			}
+			pre span.red span.req {
+				color: #ad6557;
+			}
+			pre span span.token {
+				text-decoration: underline;
+			}
+			pre span span.token span.small {
+				font-style: italic;
+			}
+			pre span span.token span.full {
+				display: none;
+			}
+			pre span span.token.v span.small {
+				display: none;
+			}
+			pre span span.token.v span.full {
+				display: inline;
+			}
+			pre span span.test {
+				font-weight: 400;
+			}
+			pre span.green span.test {
+				color: #4da600;
+			}
+			pre span.red span.test {
+				color: #ad1d00;
+				font-weight: 800;
+			}
+		</style>
+	</head>
+	<body>
+		<pre></pre>
+	</body>
+</html>
