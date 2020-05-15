@@ -1,3 +1,5 @@
 ### Github File Push Ignore
 
 **/*.class
+asstes/orange.png
+assets/user.db
