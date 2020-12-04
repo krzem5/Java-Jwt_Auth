@@ -277,7 +277,7 @@ public class JWTAuth extends Constants{
 			return false;
 		}
 		String _tk=this._jwt_token(dt,s);
-		return _tk.equals(tk);
+		return _tk.equals(tk);// Timing Attack!
 	}
 
 
