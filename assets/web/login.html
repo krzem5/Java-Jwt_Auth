@@ -67,7 +67,7 @@
 								document.querySelectorAll("div.box div.final div.submit")[0].classList.add("e");
 								document.querySelectorAll("div.box div.final div.submit")[0].onclick=function(){
 									var il=cls.parentNode.parentNode.parentNode.querySelectorAll("div.input div.pad input.inp");
-									fetch("/auth/login",{method:"POST",mode:"same-origin",cache:"no-cache",credentials:"same-origin",redirect:"follow",referrerPolicy:"no-referrer",body:btoa(il[0].value.replace(/\|/gm,"\\|")+"|"+il[1].value)}).then((r)=>r.text()).then((r)=>{
+									fetch("/auth/login",{method:"POST",mode:"same-origin",cache:"no-cache",credentials:"same-origin",redirect:"follow",referrerPolicy:"no-referrer",body:btoa(il[0].value.replace(/\\/gm,/\\\\/gm).replace(/\|/gm,"\\|")+"|"+il[1].value)}).then((r)=>r.text()).then((r)=>{
 										r=atob(r);
 										if (r.length>1){
 											localStorage.token=r;
