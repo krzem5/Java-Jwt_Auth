@@ -111,10 +111,10 @@ public class Cryptography extends Constants{
 
 
 	public static String _base64_decode_no_padding(String s,int l){
-		String o=new String(Cryptography._base64_decode(s));
+		String o=Cryptography._base64_decode(s);
 		while (o.length()!=l){
 			s+="=";
-			o=new String(Cryptography._base64_decode(s));
+			o=Cryptography._base64_decode(s);
 		}
 		return o;
 	}

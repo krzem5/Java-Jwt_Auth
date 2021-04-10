@@ -59,7 +59,7 @@ public class HTTPServerFunctions extends Constants{
 			c.s.send_200(c.f,c.out,c.b_out);
 		}
 		else{
-			c.s.send_404(c.out,c.b_out);
+			c.s.send_404(c.out);
 		}
 	}
 

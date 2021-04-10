@@ -23,10 +23,22 @@ import java.util.Map;
 
 
 public class HTTPServer extends Constants{
+	private Class _fc;
+	private Map<String,Map<String,Method>> _ft;
+	private List<String> _pml;
+
+
+
 	public HTTPServer(Class fc){
+		this._fc=fc;
+		this._ft=this._gen_table(fc);
+		this._pml=this._gen_payload_method_list(fc);
+	}
+
+
+
+	public void start(){
 		try{
-			Map<String,Map<String,Method>> ft=this._gen_table(fc);
-			List<String> pml=this._gen_payload_method_list(fc);
 			HTTPServer cls=this;
 			ServerSocket ss=new ServerSocket(PORT);
 			while (true){
@@ -34,7 +46,7 @@ public class HTTPServer extends Constants{
 				new Thread(new Runnable(){
 					@Override
 					public void run(){
-						cls._process(s,pml,ft,fc);
+						cls._process(s);
 					}
 				}).start();
 			}
@@ -71,13 +83,13 @@ public class HTTPServer extends Constants{
 
 
 
-	public void send_404(PrintWriter out,BufferedOutputStream b_out){
+	public void send_404(PrintWriter out){
 		this.send_header(404,out,"text/plain",0);
 	}
 
 
 
-	public void send_501(PrintWriter out,BufferedOutputStream b_out){
+	public void send_501(PrintWriter out){
 		this.send_header(404,out,"text/plain",0);
 	}
 
@@ -112,7 +124,6 @@ public class HTTPServer extends Constants{
 	public void read_file(File f,BufferedOutputStream o){
 		try{
 			FileInputStream s=new FileInputStream(f);
-			int sz=this.get_length(f);
 			byte[] b=new byte[1024];
 			while (true){
 				if (s.read(b,0,1024)==-1){
@@ -129,7 +140,7 @@ public class HTTPServer extends Constants{
 
 
 
-	private void _process(Socket cs,List<String> pml,Map<String,Map<String,Method>> ft,Class fc){
+	private void _process(Socket cs){
 		try{
 			BufferedReader in=new BufferedReader(new InputStreamReader(cs.getInputStream()));
 			PrintWriter out=new PrintWriter(cs.getOutputStream());
@@ -144,9 +155,9 @@ public class HTTPServer extends Constants{
 				b_out.close();
 				return;
 			}
-			if (!ft.containsKey(dt[0])){
+			if (!this._ft.containsKey(dt[0])){
 				System.out.printf("(%s) %s (send_501)\n",cs.getRemoteSocketAddress().toString(),String.join(" ",dt));
-				this.send_501(out,b_out);
+				this.send_501(out);
 			}
 			else{
 				Map<String,String> hl=new HashMap<String,String>();
@@ -165,15 +176,15 @@ public class HTTPServer extends Constants{
 						p+=String.valueOf((char)in.read());
 					}
 				}
-				if (p==null&&pml.contains(dt[0])){
+				if (p==null&&this._pml.contains(dt[0])){
 					System.out.printf("(%s) %s (send_411)\n",cs.getRemoteSocketAddress().toString(),String.join(" ",dt));
 					this.send_header(411,out,"text/plain",0);
 				}
 				else{
 					boolean ex=false;
-					for (Map.Entry<String,Method> e:ft.get(dt[0]).entrySet()){
+					for (Map.Entry<String,Method> e:this._ft.get(dt[0]).entrySet()){
 						if (this._match_tree(e.getKey(),dt[1])==true){
-							e.getValue().invoke(fc,new HTTPConnection(this,cs.getRemoteSocketAddress(),this.get_file(dt[1]),hl,p,out,b_out));
+							e.getValue().invoke(this._fc,new HTTPConnection(this,cs.getRemoteSocketAddress(),this.get_file(dt[1]),hl,p,out,b_out));
 							ex=true;
 							System.out.printf("(%s) %s (%s)\n",cs.getRemoteSocketAddress().toString(),String.join(" ",dt),e.getValue().getName());
 							break;

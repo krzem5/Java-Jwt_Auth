@@ -10,6 +10,6 @@ public class Main{
 
 
 	public Main(){
-		new HTTPServer(HTTPServerFunctions.class);
+		new HTTPServer(HTTPServerFunctions.class).start();
 	}
 }
